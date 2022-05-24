@@ -8,7 +8,7 @@ const jwt = require('jsonwebtoken')
 const app = express()
 
 //JSON
-app.user(express.json())
+app.use(express.json())
 
 //models
 const User = require('./models/User')
@@ -16,6 +16,20 @@ const User = require('./models/User')
 //open route
 app.get('/', (req, res) => {
     res.status(200).json({ msg: 'Bem vindo!' })
+})
+
+// private route
+app.get("/user/:id", async(req, res) => {
+    const id = req.params.id
+
+    //check if user exists
+
+    const user = await User.findBuId(id, 'password')
+
+    if (!user) {
+        return res.status(404).json({ msg: 'Usuário não encontrado' })
+
+    }
 })
 
 //Register User 
@@ -36,7 +50,7 @@ app.post('/auth/register', async(req, res) => {
         return res.status(422).json({ msg: 'A senha é obrigatório!' })
     }
     if (password !== confirmpassword) {
-        return res.status(422).json({ 'As senhas não conferem!' })
+        return res.status(422).json({ msg: 'As senhas não conferem!' })
     }
 
     //check if user exists
@@ -82,6 +96,35 @@ app.post("/auth/user", async(req, res) => {
 
     if (!passwordl) {
         return res.status(422).json({ msg: 'A senha é obrigatório!' })
+    }
+
+    //check user  if exists 
+    const user = await User.findOne({ email: email })
+    if (!user) {
+        return res.status(404).json({ msg: 'Usuário não encontrado' })
+    }
+
+    // check if password match
+    const checkPassword = await bcrypt.compare(password, user.password)
+    if (!checkPassword) {
+        return res.status(422).json({ msg: 'Senha inválida!' })
+    }
+
+    try {
+        const secret = process.env.SECRET
+        const token = jwt.sign({
+                id: user._id,
+            },
+            secret,
+        )
+        res.status(200).json({ msg: 'Autenticação realizada com sucesso', token })
+
+    } catch (err) {
+        console.log(error)
+
+        res.status(500).json({
+            msg: 'Aconteceu erro no servidor, tente novamente mais tarde!'
+        })
     }
 
 })
