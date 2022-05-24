@@ -131,7 +131,7 @@ app.post("/auth/user", async(req, res) => {
 
 //credenciais
 const dbUser = process.env.DB_USER
-const dbPassword = procesDB_PASS
+const dbPassword = process.DB_PASS
 
 mongoose.connect('mongodb+srv://${dbUser}:${dbPassword }@cluster0.s1y1q.mongodb.net/?retryWrites=true&w=majority').then(() => {
     app.listen(3000)
